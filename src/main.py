@@ -1,6 +1,7 @@
 import requests
 import schedule
 import time
+import random
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -10,11 +11,12 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
-# TEST PRINT
-print("BOT TOKEN:", BOT_TOKEN)
-print("CHAT ID:", CHAT_ID)
 
-# ZEPTO API
+# TEST PRINT
+# print("BOT TOKEN:", BOT_TOKEN)
+# print("CHAT ID:", CHAT_ID)
+
+# Zepto API
 API_URL = "https://bff-gateway.zepto.com/cart-service/api/v1/cart/product-detail"
 
 HEADERS = {
@@ -34,6 +36,13 @@ PAYLOAD = {
     ]
 }
 
+# Random emoji list
+EMOJIS = ["☕", "🔥", "🚀", "😎", "💸", "👀", "🤑", "⚡"]
+
+
+def random_emoji():
+    return random.choice(EMOJIS)
+
 
 def send_telegram(message):
 
@@ -52,6 +61,7 @@ def check_price():
     print("Checking price at:", datetime.now())
 
     try:
+
         response = requests.post(API_URL, json=PAYLOAD, headers=HEADERS)
 
         data = response.json()
@@ -59,6 +69,7 @@ def check_price():
         product = data["cartProductResponse"][0]
 
         name = product["product"]["name"]
+
         price_paise = product["discountedSellingPrice"]
 
         price_rupees = price_paise / 100
@@ -66,10 +77,16 @@ def check_price():
         print("Product:", name)
         print("Current Price: ₹", price_rupees)
 
-        if price_rupees <= 99:
-        # if True:
+        emoji = random_emoji()
 
-            alert_message = f"☕ Zepto Price Drop!\n{name} is now ₹{price_rupees}"
+        # Send live update every check
+        update_message = f"{emoji} Price Check\n{name}\nPrice: ₹{price_rupees}"
+
+        send_telegram(update_message)
+
+        if price_rupees <= 99:
+
+            alert_message = f"🚨 PRICE DROP!\n{name} is now ₹{price_rupees} {emoji}"
 
             print(alert_message)
 
@@ -82,16 +99,20 @@ def check_price():
         print("Error:", e)
 
 
-schedule.every(60).minutes.do(check_price)
+# Run every 2 minutes
+schedule.every(2).minutes.do(check_price)
 
 print("Zepto Price Monitor Started...")
 
 send_telegram("🤖 Zepto Price Monitor Started")
 
+# Run forever
 try:
+
     while True:
         schedule.run_pending()
         time.sleep(1)
 
 except KeyboardInterrupt:
-    print("\nBot stopped by user.")
+
+    print("Bot stopped")
