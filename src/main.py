@@ -2,10 +2,17 @@ import requests
 import schedule
 import time
 from datetime import datetime
+import os
+from dotenv import load_dotenv
 
-# TELEGRAM SETTINGS
-BOT_TOKEN = "8757257863:AAExdRCyGSdWWPX7GhdTESMzxFRUAPhhdtg"
-CHAT_ID = "5641783027"
+# Load environment variables
+load_dotenv()
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
+# TEST PRINT
+print("BOT TOKEN:", BOT_TOKEN)
+print("CHAT ID:", CHAT_ID)
 
 # ZEPTO API
 API_URL = "https://bff-gateway.zepto.com/cart-service/api/v1/cart/product-detail"
@@ -29,6 +36,7 @@ PAYLOAD = {
 
 
 def send_telegram(message):
+
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
     payload = {
@@ -74,12 +82,10 @@ def check_price():
         print("Error:", e)
 
 
-# run every 5 minutes
-schedule.every(2).minutes.do(check_price)
+schedule.every(60).minutes.do(check_price)
 
 print("Zepto Price Monitor Started...")
 
-# send startup message
 send_telegram("🤖 Zepto Price Monitor Started")
 
 try:
